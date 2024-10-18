@@ -1,0 +1,859 @@
+---
+title: Práctica Larga
+author: "Juan González, Alejando Miñambres y Javier Ramos"
+output: html_document
+---
+```{r setup,include=FALSE}
+if(!require("rgl")) {install.packages("rgl")}
+if(!require("plot3D")) {install.packages("plot3D")}
+if(!require("mvtnorm")) {install.packages("mvtnorm")}
+if(!require("ggplot2")) {install.packages("ggplot2")}
+if(!require("gridExtra")) {install.packages("gridExtra")}
+if(!require("DT")) {install.packages("DT")}
+
+library(rgl)
+library(plot3D)
+library(mvtnorm)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::knit_hooks$set(webgl = hook_webgl)
+
+```
+
+<H1 align="center"> **Primera Parte **</H1>
+
+### ***Ejercicio 1***
+ 
+#### <b style = 'color : grey;'>**¿Qué funciones contienen los paquetes rgl, plot3D, mvtnorm, y para que sirven? **</b>
+
+* rgl &rarr; Contiene funciones para representaciones 3D en tiempo real (interactivas). open3d() sirve para abrir una nueva ventana, con plot3d() podemos representar puntos y con funciones como cube3d() podemos representar objetos geométricos.
+* plot3D &rarr; Contiene funciones para visualizar datos en 2D y 3D, siendo muchas extensiones de las funciones base de R persp() e image(), como persp3D(), hist3D() o image3D().
+* mvtnorm &rarr; Contiene muy pocas funciones, pero las suficientes para representar distribuciones normales multivariantes: dmvnorm() para la densidad, pmvnorm() para la función de distribución o rmvnorm() para generar muestras.
+
+### ***Ejercicio 2***
+
+#### <b style = 'color : grey;'>**Representar las distribuciones marginales univariantes**</b>
+
+Para la primera parte, primero analizamos las distribuciones y vemos que hay las siguientes (se omiten las repetidas):
+
+* $N(0,1)$
+* $N(10,13)$
+* $N(30,42)$
+* $N(20,1)$
+* $N(30,2)$
+```{r}
+p1<-data.frame(x=c(-3,3)) %>%
+  ggplot(aes(x = x)) +
+  stat_function(fun = pnorm, n = 100, args = list(mean = 0, sd = 1),
+                color = "orange",size = 1) + 
+  ylab("F(x)")+
+  xlab("") +
+  labs(title = "Distribución Normal",subtitle="N(0,1)") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+
+p2<-data.frame(x=c(-5,17)) %>%
+  ggplot(aes(x = x)) +
+  stat_function(fun = pnorm, n = 100, args = list(mean = 10, sd = sqrt(13)), 
+                color = "orange",size = 1) + 
+  ylab("F(x)")+
+  xlab("") +
+  labs(title = "Distribución Normal",subtitle="N(10,13)") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+
+p3<-data.frame(x=c(18,42)) %>%
+  ggplot(aes(x = x)) +
+  stat_function(fun = pnorm, n = 100, args = list(mean = 30, sd = sqrt(42)), 
+                color = "orange",size = 1) + 
+  ylab("F(x)")+
+  xlab("") +
+  labs(title = "Distribución Normal",subtitle="N(30,42)") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+
+p4<-data.frame(x=c(17,25)) %>%
+  ggplot(aes(x = x)) +
+  stat_function(fun = pnorm, n = 100, args = list(mean = 20, sd = sqrt(1)), 
+                color = "orange",size = 1) + 
+  ylab("F(x)")+
+  xlab("") +
+  labs(title = "Distribución Normal",subtitle="N(20,1)") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+
+p5<-data.frame(x=c(25,35)) %>%
+  ggplot(aes(x = x)) +
+  stat_function(fun = pnorm, n = 100, args = list(mean = 30, sd = sqrt(2)), 
+                color = "orange",size = 1) + 
+  ylab("F(x)")+
+  xlab("") +
+  labs(title = "Distribución Normal",subtitle="N(30,2)") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+
+
+grid.arrange(p1,p2,p3,p4,p5, nrow = 2)
+```
+
+#### <b style = 'color : grey;'>**Reperesentar las siguientes funciones normales bidimensionales (se omiten las repetidas) **</b>
+
+* $N \left( \begin{pmatrix}0\\10\end{pmatrix},\begin{pmatrix}1 & 2\\2 & 13\end{pmatrix} \right)$
+* $N \left( \begin{pmatrix}10\\30\end{pmatrix},\begin{pmatrix}13 & 23\\23 & 42\end{pmatrix} \right)$
+* $N \left( \begin{pmatrix}0\\30\end{pmatrix},\begin{pmatrix}1 & 4\\4 & 42\end{pmatrix} \right)$
+* $N \left( \begin{pmatrix}0\\0\end{pmatrix},\begin{pmatrix}1 & 0.8\\0.8 & 1\end{pmatrix} \right)$
+* $N \left( \begin{pmatrix}0\\0\end{pmatrix},\begin{pmatrix}1 & 0.5\\0.5 & 1\end{pmatrix} \right)$
+* $N \left( \begin{pmatrix}0\\0\end{pmatrix},\begin{pmatrix}1 & 0.2\\0.2 & 1\end{pmatrix} \right)$
+* $N \left( \begin{pmatrix}20\\30\end{pmatrix},\begin{pmatrix}1 & -3/5\\-3/5 & 2\end{pmatrix} \right)$
+```{r,webgl = TRUE}
+mfrow3d(3,3)
+persp3d(function(x,y){dmvnorm(cbind(x,y),mean=c(0,10), sigma=matrix(c(1,2,2,13),ncol=2))}, xlim=c(-3,3), ylim=c(-6,14),col="blue",zlab="")
+
+persp3d(function(x,y){dmvnorm(cbind(x,y),mean=c(10,30), sigma=matrix(c(13,23,23,42),ncol=2))}, xlim=c(-6,14), ylim=c(23,37),col="red",zlab="")
+
+persp3d(function(x,y){dmvnorm(cbind(x,y),mean=c(0,30), sigma=matrix(c(1,4,4,42),ncol=2))}, xlim=c(-3,3), ylim=c(23,37),col="green",zlab="")
+
+persp3d(function(x,y){dmvnorm(cbind(x,y),mean=c(0,0), sigma=matrix(c(1,0.8,0.8,1),ncol=2))}, xlim=c(-3,3), ylim=c(-3,3),col="yellow",zlab="")
+
+persp3d(function(x,y){dmvnorm(cbind(x,y),mean=c(0,0), sigma=matrix(c(1,0.5,0.5,1),ncol=2))}, xlim=c(-3,3), ylim=c(-3,3),col="black",zlab="")
+
+persp3d(function(x,y){dmvnorm(cbind(x,y),mean=c(0,0), sigma=matrix(c(1,0.2,0.2,1),ncol=2))}, xlim=c(-3,3), ylim=c(-3,3),col="pink",zlab="")
+
+persp3d(function(x,y){dmvnorm(cbind(x,y),mean=c(20,30), sigma=matrix(c(1,-3/5,-3/5,2),ncol=2))}, xlim=c(17,23), ylim=c(28,32),col="purple",zlab="")
+```
+
+### ***Ejercicio 3***
+
+#### <b style = 'color : grey;'>**Escribir una función que permita hacer las representaciones anteriores a partir de los parámetros y luego aplicarla a los casos escritos arriba**</b>
+
+La siguiente función representa la función de distribución de las normales univariantes y la función de densidad de las distribuciones normales bivariantes.
+```{r}
+reprBiNorm <- function(medias, varianzas,col="orange",limites){
+  if(any(is.numeric(medias)==F)){stop("medias no numerico")}
+  if(any(is.na(medias))){stop("medias es NA")}
+  if(any(is.numeric(varianzas)==F)){stop("varianzas no numerico")}
+  if(any(is.na(varianzas))){stop("varianzas es NA")}
+  
+  if (length(medias)==1 & length(varianzas)==1){
+    
+    data.frame(x=limites) %>%
+  ggplot(aes(x = x)) +
+  stat_function(fun = pnorm, n = 100, args = list(mean = medias, sd = sqrt(varianzas)), 
+                color = col,size = 1) + 
+  ylab("F(x)")+
+  xlab("") +
+  labs(title = "Distribución Normal",subtitle=paste("N(",medias,",",varianzas,")",sep="")) +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+    
+  } else if (length(medias)^2 == length(varianzas)) {
+    persp3d(function(x,y){dmvnorm(cbind(x,y),mean=medias, sigma=varianzas)}, xlim=c(medias[1]-3*sqrt(varianzas[1,1]),medias[1]+3*sqrt(varianzas[1,1])), ylim=c(medias[2]-3*sqrt(varianzas[2,2]),medias[2]+3*sqrt(varianzas[2,2])),zlab="",col=col)
+    
+  } else {
+    stop("Parámetros inválidos")
+  }
+}
+```
+
+Aplicando la función a los casos de antes, primero con las distribuciones marginales univariantes:
+```{r}
+p1<-reprBiNorm(0,1,limites=c(-3,3))
+p2<-reprBiNorm(10,13,limites=c(-5,17))
+p3<-reprBiNorm(30,42,limites=c(18,42))
+p4<-reprBiNorm(20,1,limites=c(17,25))
+p5<-reprBiNorm(30,2,limites=c(25,35))
+
+grid.arrange(p1,p2,p3,p4,p5, nrow = 2)
+```
+
+Y ahora con las funciones de densidad bivariantes:
+```{r,webgl = TRUE}
+mfrow3d(3,3)
+reprBiNorm(c(0,10),matrix(c(1,2,2,13),ncol=2),col="blue")
+reprBiNorm(c(10,30),matrix(c(13,23,23,42),ncol=2),col="red")
+reprBiNorm(c(0,30),matrix(c(1,4,4,42),ncol=2),col="green")
+reprBiNorm(c(0,0),matrix(c(1,0.8,0.8,1),ncol=2),col="yellow")
+reprBiNorm(c(0,0),matrix(c(1,0.5,0.5,1),ncol=2),col="black")
+reprBiNorm(c(0,0),matrix(c(1,0.2,0.2,1),ncol=2),col="pink")
+reprBiNorm(c(20,30),matrix(c(1,-3/5,-3/5,2),ncol=2),col="purple")
+```
+
+<H1 align="center"> **Segunda Parte **</H1>
+
+### ***Ejercicio 4***
+
+#### <b style = 'color : grey;'>**Escribir una función para generar muestras aleatorias de tamaño n de una normal multivariante con vector de medias y matriz de varianzas-covarianzas dada en el momento de ejecutarla utilizando la descomposición de Choleski. **</b>
+
+Creamos una función para generar muestrar aleatorias de una normal multivariante utilizando la descomposición de Choleski:
+```{r}
+rmvnormChol <- function(n,mu,sigma){
+  if(n<1){stop("El tamaño de la muestra es incorrecto")}
+  if(length(mu)^2!=length(sigma)){stop("Parámetros incorrectos")}
+   
+  L <- t(chol(sigma))
+  
+  res<-c()
+  for(i in 1:(n/2)){
+    Z <- rnorm(length(mu))
+    tmp <- L%*%Z
+    res <- cbind(res, mu+tmp)
+  }  
+  
+  resultado <- matrix(res, nrow=n, ncol=length(mu),byrow=T)
+  return(resultado)
+}
+```
+
+### ***Ejercicio 5***
+#### <b style = 'color : grey;'>**Buscar la función del paquete mvtnorm que permita generar muestras de tamaño n de una normal multivariante y probarla en un ejemplo. **</b>
+
+La función es rmvnorm, permite generar muestras aleatorias.
+A continuación se usa con los datos del Caso 1:
+```{r}
+datatable(rmvnorm(20,mean=c(0,10,30),sigma=matrix(c(1,2,4,2,13,23,4,23,42),nrow = 3)),
+          colnames = c("Muestra 1", "Muestra 2", "Muestra 3"))
+```
+
+### ***Ejercicio 6***
+
+#### <b style = 'color : grey;'>**Aplicar las funciones de los dos apartados anteriores para generar muestras de tamaño n = 100 para los parámetros de los casos escritos arriba.**</b>
+
+Calculamos los datos para cada uno de los casos de la primera parte utilizando ambas funciones:
+
+* Caso 1: $N \left( \begin{pmatrix}0\\10\\30\end{pmatrix},\begin{pmatrix}1 & 2 & 4\\2 & 13 & 23\\4 & 23 & 42\end{pmatrix} \right)$
+
+```{r}
+c1_fun <- rmvnormChol(100,mu=c(0,10,30),
+                      sigma=matrix(c(1,2,4,2,13,23,4,23,42),ncol=3))
+datatable(c1_fun,
+          colnames = c("Muestra 1", "Muestra 2","Muestra 3"))
+
+c1_funr <- rmvnorm(100,mean=c(0,10,30),
+                   sigma=matrix(c(1,2,4,2,13,23,4,23,42),ncol=3))
+datatable(c1_funr,
+          colnames = c("Muestra 1", "Muestra 2","Muestra 3"))
+```
+
+* Caso 2: $N \left( \begin{pmatrix}0\\0\\0\\0\end{pmatrix},\begin{pmatrix}1.0 & 0.8 & 0.5 & 0.2 \\0.8 & 1.0 & 0.5 & 0.5\\0.5 & 0.5 & 1.0 & 0.5\\0.2 & 0.5 & 0.5 & 1.0\end{pmatrix} \right)$
+
+```{r}
+c2_fun <- rmvnormChol(100,mu=c(0,0,0,0),
+                      sigma=matrix(c(1.0,0.8,0.5,0.2,0.8,1.0,0.5,0.5,0.5,0.5,1.0,0.5,0.2,0.5,0.5,1.0),ncol=4))
+datatable(c2_fun,
+          colnames = c("Muestra 1", "Muestra 2","Muestra 3","Muestra 4"))
+
+c2_funr <- rmvnorm(100,mean=c(0,0,0,0),
+                   sigma=matrix(c(1.0,0.8,0.5,0.2,0.8,1.0,0.5,0.5,0.5,0.5,1.0,0.5,0.2,0.5,0.5,1.0),ncol=4))
+datatable(c2_funr,
+          colnames = c("Muestra 1", "Muestra 2","Muestra 3","Muestra 4"))
+```
+
+* Caso 3: $N \left( \begin{pmatrix}20\\30\end{pmatrix},\begin{pmatrix}1 & -3/5 \\-3/5 & 2\end{pmatrix} \right)$
+
+```{r}
+c3_fun <- rmvnormChol(100,mu=c(20,30),
+                      sigma=matrix(c(1,-3/5,-3/5,2), ncol=2))
+datatable(c3_fun,
+          colnames = c("Muestra 1", "Muestra 2"))
+
+c3_funr <- rmvnorm(100,mean=c(20,30),
+                   sigma=matrix(c(1,-3/5,-3/5,2), ncol=2))
+datatable(c3_funr,
+          colnames = c("Muestra 1", "Muestra 2"))
+```
+
+
+#### <b style = 'color : grey;'>**Representar gráficos de dispersión ó matrices de gráficos planos con los datos simulados. **</b>
+
+Creamos unas funciones que nos permitan realizar los gráficos de dispersión para cada uno de los casos:
+```{r}
+# Graficos por separado
+grafdispsep <- function(datos1, titulo1, color){
+    plot(datos1,
+     col = color,
+     xlab="", ylab="",
+     main=titulo1)
+}
+
+# Graficos juntos
+grafdisp <- function(datos1, datos2, titulo1, titulo2){
+    plot(datos1,
+         col = "Blue",
+         xlab="", ylab="",
+         main="Gráfico de dispersión conjunto")
+
+    points(datos2,
+         col = "Red")
+    
+    legend("topright", pch = 1, col=c("Blue", "Red"),
+         legend=c(titulo1, titulo2))
+}
+```
+
+Nos ocurre lo mismo con las matrices de gráficos planos así que también creamos una función:
+```{r}
+grafpla <- function(datos){
+    colnames(datos) <- paste("Muestra",1:(ncol(datos)), sep=" ")
+
+    pairs(datos, col=c("Blue", "Red"), cex.labels = 0.9,
+        main="Matriz de gráficos planos")
+}
+```
+
+
+
+Caso 1:
+Representamos funciones de dispersión para los datos calculados
+```{r}
+par(mfrow=c(1,3))
+grafdispsep(c1_fun, "Nuestra función",color="blue")
+grafdisp(c1_fun, c1_funr, "Nuestra función", "Función R")
+grafdispsep(c1_funr, "Función R",color="red")
+
+```
+
+Si ahora realizamos una matriz de gráficos planos con los datos generados por nuestra función:
+```{r}
+grafpla(c1_fun)
+```
+
+y si utilizamos la función de r:
+```{r}
+grafpla(c1_funr)
+```
+
+
+Caso 2:
+Representamos funciones de dispersión para los datos calculados
+```{r}
+par(mfrow=c(1,3))
+grafdispsep(c2_fun, "Nuestra función", color="blue")
+grafdisp(c2_fun, c2_funr, "Nuestra función", "Función R")
+grafdispsep(c2_funr, "Función R",color="red")
+
+```
+
+Si ahora realizamos una matriz de gráficos planos con los datos generados por nuestra función:
+```{r}
+grafpla(c2_fun)
+```
+
+y si utilizamos la función de r:
+```{r}
+grafpla(c2_funr)
+```
+
+Caso 3:
+
+Representamos funciones de dispersión para los datos calculados
+```{r}
+par(mfrow=c(1,3))
+grafdispsep(c3_fun, "Nuestra función", color="blue")
+grafdisp(c3_fun, c3_funr, "Nuestra función", "Función R")
+grafdispsep( c3_funr, "Función R",color="red")
+
+
+```
+
+Si ahora realizamos una matriz de gráficos planos con los datos generados por nuestra función:
+```{r}
+grafpla(c3_fun)
+```
+
+y si utilizamos la función de r:
+```{r}
+grafpla(c3_funr)
+```
+
+
+#### <b style = 'color : grey;'>Representar gráficos de dispersión con los datos simulados con la función presp3d del paquete rgl </b>
+
+Ahora se nos pide representar los mismos datos con gráficos de dispersión en 3d utilizando la función persp3d del paquete rgl pero esta función solamente nos permite representar superficies y por tanto no tenemos la posibilidad de crear un gráfico de dispersión. Por este motivo, en lugar de utlizar esta función, utlizamos plot3d perteneciente al mismo paquete.
+
+Para comparar los datos generados con nuestra función y los generados por la función ya creada en R, representamos estos cada una de las muestras obtenidas con una de ellas frente a las obtenidas con la otra:
+
+* Caso 1:
+
+```{r,webgl = TRUE}
+mfrow3d(1,3)
+
+plot3d(x=c1_fun[,1], y=c1_funr[,1],      
+       type = "s",   
+       col = "Light Blue",
+       xlab="Nuestra funcion", ylab="Funcion de R", zlab="")
+
+plot3d(x=c1_fun[,2], y=c1_funr[,2],      
+       type = "s",   
+       col = "Coral",
+       xlab="Nuestra funcion", ylab="Funcion de R", zlab="")
+
+plot3d(x=c1_fun[,3], y=c1_funr[,3],      
+       type = "s",   
+       col = "Light Green",
+       xlab="Nuestra funcion", ylab="Funcion de R", zlab="")
+
+```
+
+* Caso 2:
+
+```{r,webgl = TRUE}
+mfrow3d(2,2)
+plot3d(x=c2_fun[,1], y=c2_funr[,1],      
+       type = "s",   
+       col = "Light Blue",
+       xlab="Nuestra funcion", ylab="Funcion de R", zlab="")
+
+plot3d(x=c2_fun[,2], y=c2_funr[,2],      
+       type = "s",   
+       col = "Coral",
+       xlab="Nuestra funcion", ylab="Funcion de R", zlab="")
+
+plot3d(x=c2_fun[,3], y=c2_funr[,3],      
+       type = "s",   
+       col = "Light Green",
+       xlab="Nuestra funcion", ylab="Funcion de R", zlab="")
+
+plot3d(x=c2_fun[,4], y=c2_funr[,4],      
+       type = "s",   
+       col = "Purple",
+       xlab="Nuestra funcion", ylab="Funcion de R", zlab="")
+
+```
+
+* Caso 3:
+
+```{r,webgl = TRUE}
+mfrow3d(1,2)
+plot3d(x=c3_fun[,1], y=c3_funr[,1],      
+       type = "s",   
+       col = "Light Blue",
+       xlab="Nuestra funcion", ylab="Funcion de R", zlab="")
+
+plot3d(x=c3_fun[,2], y=c3_funr[,2],      
+       type = "s",   
+       col = "Coral",
+       xlab="Nuestra funcion", ylab="Funcion de R", zlab="")
+```
+
+
+#### <b style = 'color : grey;'>Representar histogramas e histogramas bidimensionales cuando sea pertinente </b>
+
+Caso 1:
+
+Representamos un histograma para cada una de las muestras generadas por cada función:
+
+Representamos a la en color azul los datos generados con nuestra función y en color rojo los generados con la función de R:
+
+```{r}
+par(mfrow=c(3,2))
+hist(c1_fun[,1], 
+     main="Muestra 1",
+     xlab = "Valores", ylab="Frecuencia",col="Light Blue")
+
+hist(c1_funr[,1], 
+     main="Muestra 1",
+     xlab = "Valores", ylab="Frecuencia",col="Coral")
+
+
+hist(c1_fun[,2], 
+     main="Muestra 2",
+     xlab = "Valores", ylab="Frecuencia",col="Light Blue")
+
+hist(c1_funr[,2], 
+     main="Muestra 2",
+     xlab = "Valores", ylab="Frecuencia",col="Coral")
+
+
+hist(c1_fun[,3], 
+     main="Muestra 3",
+     xlab = "Valores", ylab="Frecuencia",col="Light Blue")
+
+hist(c1_funr[,3], 
+     main="Muestra 3",
+     xlab = "Valores", ylab="Frecuencia",col="Coral")
+```
+
+
+Ahora utilizamos histogramas bidimensionales para comparar los valores obtenidos con cada una de las funciones:
+
+Preparamos los datos y después los representamos para cada una de las muestras:
+
+* Muestra 1:
+
+```{r}
+h11_fun <- cut(c1_fun[,1], 25)
+h11_funr <- cut(c1_funr[,1], 25)
+datosc11 <- table(h11_fun, h11_funr)
+```
+
+```{r}
+par(mfrow=c(1,2))
+hist3D(z=datosc11, border="Black")
+image2D(z=datosc11, border="Black")
+```
+
+* Muestra 2:
+
+```{r}
+h12_fun <- cut(c1_fun[,2], 25)
+h12_funr <- cut(c1_funr[,2], 25)
+datosc12 <- table(h12_fun, h12_funr)
+```
+
+```{r}
+par(mfrow=c(1,2))
+hist3D(z=datosc12, border="Black")
+image2D(z=datosc12, border= "Black")
+```
+
+* Muestra 3:
+
+```{r}
+h13_fun <- cut(c1_fun[,3], 25)
+h13_funr <- cut(c1_funr[,3], 25)
+datosc13 <- table(h13_fun, h13_funr)
+```
+
+```{r}
+par(mfrow=c(1,2))
+hist3D(z=datosc13, border="Black")
+image2D(z=datosc13, border="Black")
+```
+
+
+Caso 2:
+
+Representamos un histograma para cada una de las muestras generadas por cada función:
+
+Representamos a la en color azul los datos generados con nuestra función y en color rojo los generados con la función de R:
+
+```{r}
+par(mfrow=c(2,4))
+hist(c2_fun[,1], 
+     main="Muestra 1",
+     xlab = "Valores", ylab="Frecuencia",col="Light Blue")
+
+hist(c2_funr[,1], 
+     main="Muestra 1",
+     xlab = "Valores", ylab="Frecuencia",col="Coral")
+
+
+hist(c2_fun[,2], 
+     main="Muestra 2",
+     xlab = "Valores", ylab="Frecuencia",col="Light Blue")
+
+hist(c2_funr[,2], 
+     main="Muestra 2",
+     xlab = "Valores", ylab="Frecuencia",col="Coral")
+
+
+hist(c2_fun[,3], 
+     main="Muestra 3",
+     xlab = "Valores", ylab="Frecuencia",col="Light Blue")
+
+hist(c2_funr[,3], 
+     main="Muestra 3",
+     xlab = "Valores", ylab="Frecuencia",col="Coral")
+
+
+hist(c2_fun[,4], 
+     main="Muestra 4",
+     xlab = "Valores", ylab="Frecuencia",col="Light Blue")
+
+hist(c2_funr[,4], 
+     main="Muestra 4",
+     xlab = "Valores", ylab="Frecuencia",col="Coral")
+```
+
+Ahora utilizamos histogramas bidimensionales para comparar los valores obtenidos con cada una de las funciones:
+
+Preparamos los datos y después los representamos para cada una de las muestras:
+
+* Muestra 1:
+
+```{r}
+h21_fun <- cut(c2_fun[,1], 25)
+h21_funr <- cut(c2_funr[,1], 25)
+datosc21 <- table(h21_fun, h21_funr)
+```
+
+```{r}
+par(mfrow=c(1,2))
+hist3D(z=datosc21, border="Black")
+image2D(z=datosc21, border="Black")
+```
+
+* Muestra 2:
+
+```{r}
+h22_fun <- cut(c2_fun[,2], 25)
+h22_funr <- cut(c2_funr[,2], 25)
+datosc22 <- table(h22_fun, h22_funr)
+```
+
+```{r}
+par(mfrow=c(1,2))
+hist3D(z=datosc22, border="Black")
+image2D(z=datosc22, border= "Black")
+```
+
+* Muestra 3:
+
+```{r}
+h23_fun <- cut(c2_fun[,3], 25)
+h23_funr <- cut(c2_funr[,3], 25)
+datosc23 <- table(h23_fun, h23_funr)
+```
+
+```{r}
+par(mfrow=c(1,2))
+hist3D(z=datosc23, border="Black")
+image2D(z=datosc23, border="Black")
+```
+
+* Muestra 4:
+
+```{r}
+h24_fun <- cut(c2_fun[,4], 25)
+h24_funr <- cut(c2_funr[,4], 25)
+datosc24 <- table(h24_fun, h24_funr)
+```
+
+```{r}
+par(mfrow=c(1,2))
+hist3D(z=datosc24, border="Black")
+image2D(z=datosc24, border="Black")
+```
+
+Caso 3:
+
+Representamos un histograma para cada una de las muestras generadas por cada función:
+
+Representamos a la en color azul los datos generados con nuestra función y en color rojo los generados con la función de R:
+
+```{r}
+par(mfrow=c(2,2))
+hist(c3_fun[,1], 
+     main="Muestra 1",
+     xlab = "Valores", ylab="Frecuencia",col="Light Blue")
+
+hist(c3_funr[,1], 
+     main="Muestra 1",
+     xlab = "Valores", ylab="Frecuencia",col="Coral")
+
+
+hist(c3_fun[,2], 
+     main="Muestra 2",
+     xlab = "Valores", ylab="Frecuencia",col="Light Blue")
+
+hist(c3_funr[,2], 
+     main="Muestra 2",
+     xlab = "Valores", ylab="Frecuencia",col="Coral")
+```
+
+Ahora utilizamos histogramas bidimensionales para comparar los valores obtenidos con cada una de las funciones:
+
+Preparamos los datos y después los representamos para cada una de las muestras:
+
+* Muestra 1:
+
+```{r}
+h31_fun <- cut(c3_fun[,1], 25)
+h31_funr <- cut(c3_funr[,1], 25)
+datosc31 <- table(h31_fun, h31_funr)
+```
+
+```{r}
+par(mfrow=c(1,2))
+hist3D(z=datosc31, border="Black")
+image2D(z=datosc31, border="Black")
+```
+
+* Muestra 2:
+
+```{r}
+h32_fun <- cut(c3_fun[,2], 25)
+h32_funr <- cut(c3_funr[,2], 25)
+datosc32 <- table(h32_fun, h32_funr)
+```
+
+```{r}
+par(mfrow=c(1,2))
+hist3D(z=datosc32, border="Black")
+image2D(z=datosc32, border= "Black")
+```
+
+
+#### <b style = 'color : grey;'>Calcular los valores estimados del vector de medias y la matriz de varianzas - covarianzas con las distintas muestras y compararlas con los parámetros teóricos correspondientes </b>
+Calculamos la media y la matriz de varianzas covarianzas de cada una de las muestras de los datos generados
+
+Caso 1:
+
+Los valores teóricos eran: $N \left( \begin{pmatrix}0\\10\\30\end{pmatrix},\begin{pmatrix}1 & 2 & 4\\2 & 13 & 23\\4 & 23 & 42\end{pmatrix} \right)$
+
+Utilizando los datos generados con nuestra función:
+```{r}
+media_c1fun <- c()
+for (i in 1:ncol(c1_fun)){
+    media_c1fun <- cbind(media_c1fun, mean(c1_fun[,i]))
+}
+media_c1fun
+
+covarianzas_c1fun <- c()
+for (i in 1:ncol(c1_fun)){
+    for (j in 1:ncol(c1_fun)){
+        covarianzas_c1fun <- cbind(covarianzas_c1fun,var(c1_fun[,i],c1_fun[,j]))
+    }
+}
+covarianzas_c1fun <- matrix(covarianzas_c1fun, ncol=ncol(c1_fun))
+covarianzas_c1fun
+```
+
+Utilizando los datos generados con la función de R:
+```{r}
+media_c1funr <- c()
+for (i in 1:ncol(c1_funr)){
+    media_c1funr <- cbind(media_c1funr, mean(c1_funr[,i]))
+}
+media_c1funr
+
+covarianzas_c1funr <- c()
+for (i in 1:ncol(c1_funr)){
+    for (j in 1:ncol(c1_funr)){
+        covarianzas_c1funr <- cbind(covarianzas_c1funr,var(c1_funr[,i],c1_funr[,j]))
+    }
+}
+covarianzas_c1funr <- matrix(covarianzas_c1funr, ncol=ncol(c1_funr))
+covarianzas_c1funr
+```
+
+
+Caso 2:
+
+Los valores teóricos eran: $N \left( \begin{pmatrix}0\\0\\0\\0\end{pmatrix},\begin{pmatrix}1.0 & 0.8 & 0.5 & 0.2 \\0.8 & 1.0 & 0.5 & 0.5\\0.5 & 0.5 & 1.0 & 0.5\\0.2 & 0.5 & 0.5 & 1.0\end{pmatrix} \right)$
+
+Utilizando los datos generados con nuestra función:
+```{r}
+media_c2fun <- c()
+for (i in 1:ncol(c2_fun)){
+    media_c2fun <- cbind(media_c2fun, mean(c2_fun[,i]))
+}
+media_c2fun
+
+covarianzas_c2fun <- c()
+for (i in 1:ncol(c2_fun)){
+    for (j in 1:ncol(c2_fun)){
+        covarianzas_c2fun <- cbind(covarianzas_c2fun,var(c2_fun[,i],c2_fun[,j]))
+    }
+}
+covarianzas_c2fun <- matrix(covarianzas_c2fun, ncol=ncol(c2_fun))
+covarianzas_c2fun
+```
+
+Utilizando los datos generados con la función de R:
+```{r}
+media_c2funr <- c()
+for (i in 1:ncol(c2_funr)){
+    media_c2funr <- cbind(media_c2funr, mean(c2_funr[,i]))
+}
+media_c2funr
+
+covarianzas_c2funr <- c()
+for (i in 1:ncol(c2_funr)){
+    for (j in 1:ncol(c2_funr)){
+        covarianzas_c2funr <- cbind(covarianzas_c2funr,var(c2_funr[,i],c2_funr[,j]))
+    }
+}
+covarianzas_c2funr <- matrix(covarianzas_c2funr, ncol=ncol(c2_funr))
+covarianzas_c2funr
+```
+
+Caso 3:
+
+Los valores teóricos eran: $N \left( \begin{pmatrix}20\\30\end{pmatrix},\begin{pmatrix}1 & -3/5 \\-3/5 & 2\end{pmatrix} \right)$
+
+Utilizando los datos generados con nuestra función:
+```{r}
+media_c3fun <- c()
+for (i in 1:ncol(c3_fun)){
+    media_c3fun <- cbind(media_c1fun, mean(c3_fun[,i]))
+}
+media_c3fun
+
+covarianzas_c3fun <- c()
+for (i in 1:ncol(c3_fun)){
+    for (j in 1:ncol(c3_fun)){
+        covarianzas_c3fun <- cbind(covarianzas_c3fun,var(c3_fun[,i],c3_fun[,j]))
+    }
+}
+covarianzas_c3fun <- matrix(covarianzas_c3fun, ncol=ncol(c3_fun))
+covarianzas_c3fun
+```
+
+Utilizando los datos generados con la función de R:
+```{r}
+media_c3funr <- c()
+for (i in 1:ncol(c3_funr)){
+    media_c3funr <- cbind(media_c3funr, mean(c3_funr[,i]))
+}
+media_c3funr
+
+covarianzas_c3funr <- c()
+for (i in 1:ncol(c3_funr)){
+    for (j in 1:ncol(c3_funr)){
+        covarianzas_c3funr <- cbind(covarianzas_c3funr,var(c3_funr[,i],c3_funr[,j]))
+    }
+}
+covarianzas_c3funr <- matrix(covarianzas_c3funr, ncol=ncol(c3_funr))
+covarianzas_c3funr
+```
+
+
+
+<H1 align="center"> **Tercera Parte **</H1>
+
+#### <b style = 'color : grey;'>Plantear algúna pregunta interesante que puedas responder con las funciones de los paquetes mvtnorm y rgl. Después resolverlo.</b>
+
+**Enunciado: **  Sabiendo que un vector aleatorio (X,Y) sigue una distribución normal bivariante, demostrar gráficamente si X e Y son independientes según los casos especificados.
+
+Caso 1: $N \left( \begin{pmatrix}0\\0\end{pmatrix},\begin{pmatrix}1 & 0\\0 & 1\end{pmatrix} \right)$
+
+Caso 2: $N \left( \begin{pmatrix}0\\0\end{pmatrix},\begin{pmatrix}1 & 0.5\\0.5 & 1\end{pmatrix} \right)$
+
+Caso 3: $N \left( \begin{pmatrix}0\\0\end{pmatrix},\begin{pmatrix}1 & 0.99\\0.99 & 1\end{pmatrix} \right)$
+
+**Respuesta**
+
+Caso 1:
+```{r,webgl = TRUE}
+mfrow3d(1,1)
+persp3d(function(x,y){dmvnorm(cbind(x,y),mean=c(0,0), sigma=matrix(c(1,0,0,1),ncol=2))},
+        xlim=c(-3,3), ylim=c(-5,5),col="blue",zlab="")
+```
+Las variables son independientes.
+
+Caso 2:
+```{r,webgl = TRUE}
+persp3d(function(x,y){dmvnorm(cbind(x,y),mean=c(0,0), sigma=matrix(c(1,0.5,0.5,1),ncol=2))},
+        xlim=c(-3,3), ylim=c(-5,5),col="red",zlab="")
+```
+Las variables si que estan relaccionadas.
+
+Caso 3:
+```{r,webgl = TRUE}
+persp3d(function(x,y){dmvnorm(cbind(x,y),mean=c(0,0), sigma=matrix(c(1,0.99,0.99,1),ncol=2))},
+        xlim=c(-3,3), ylim=c(-5,5),col="green",zlab="")
+
+
+```
+Las variables si estan relacionadas, pero en este caso vemos una relacción muy fuerte entre las dos variables.
